@@ -16,15 +16,11 @@ placed when it is added to it, not later: an unplaced project is the drift the
 six words exist to stop. `repo list` and the org's archived set are the two
 things to read, and they disagree loudly when this rots.
 
-| Side | Holds |
-| --- | --- |
-| `1-transport` | Driving adapters — the client and launcher, editor and viewer tools, XR and input managers, network and HTTP transports, Blender-side authoring addons. |
-| `2-contract` | Manuals, specifications, formats and protocols. What the other sides agree to, written down. |
-| `3-interactor` | Use cases and engine work — the Godot fork, IK and retargeting, mesh and cloth algorithms, importers and format conversion, ML. |
-| `4-entities` | The domain objects themselves — avatars, maps, entity frameworks, and the demo and test projects that embody them. |
-| `5-repository` | Persisted artifacts: model and asset stores. |
-| `6-datasource` | Where data comes from — asset banks, corpora, casync seeds, databases and their drivers. |
-| `7-service` | Backend services and everything that ships them: Uro, deployment, packaging, build orchestration. |
+**The sides are not listed here.** `default.xml` is sorted by side and reading
+it top to bottom is the listing, so a table of the same seven rows would be a
+copy that goes stale the first time anything moves and says nothing while it
+does. `CLAUDE.md` in the manuals says what each side holds, once.
+`check_readme_index.py` enforces the absence.
 
 Local paths are normalised — lowercase, hyphenated, prefixes like `TOOL_` and
 `V-Sekai.` dropped. **The GitHub names are untouched.** A `<project name=>` is
@@ -44,11 +40,12 @@ it needs an engine rebuild, so the path carries it:
 | `-gdextension` | Godot GDExtension | `godot-cpp` checkout, a `*.gdextension` file |
 | neither | Not a thing the engine compiles in or loads | GDScript addon, standalone library, service, asset bank, and any repository that is itself a Godot project |
 
-`godot_openvr` and `godot_openvr_module` are the same feature written both ways,
-and `godot-motion-matching` and `godot_motion_matching` likewise; without the
-suffix the two checkouts sit side by side saying nothing about the difference.
-The engine forks themselves — `3-interactor/godot`, `world-godot`, `world-grid`
-— take no suffix: they are what modules are built into.
+`godot_openvr` and `godot_openvr_module` are the same feature written both ways.
+Without the suffix the two checkouts sit side by side saying nothing about the
+difference, and one other pair in the manifest is arranged the same way.
+
+The engine forks take no suffix. They are what modules are compiled into, so
+naming how they load one would say nothing about them.
 
 A `project.godot` at the root outranks both suffixes. `3-interactor/sketch`
 builds the cassie GDExtension and carries a Godot project that loads it, and
@@ -83,3 +80,6 @@ Each fails the check run. None warns.
   blocked. Needs a workspace, so CI runs its self-test only; the full run is
   `python check_manifest_root.py <workspace>`.
 - `check_pr_description.py` — the pull request body must say what changed.
+- `check_readme_index.py` — no block of this readme names three or more things
+  `default.xml` declares. An index would need a hand edit every time the layout
+  moved, and nothing would report the two disagreeing.
