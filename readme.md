@@ -1,85 +1,59 @@
 # vsk-world-manifest
 
-The goal manifest for the V-Sekai world. `default.xml` is the one place that
-says which repositories are in play and where each of them sits.
+V-Sekai is spread across roughly two hundred GitHub repositories. This one
+lists them, so you can check out all of them at once and keep them updated
+together, instead of cloning them one at a time.
+
+## Requirements
+
+Git, Python 3, and Google's [`repo`](https://gerrit.googlesource.com/git-repo)
+tool. `repo` is a single Python script you put on your `PATH`:
 
 ```
+mkdir -p ~/bin
+curl -o ~/bin/repo https://storage.googleapis.com/git-repo-downloads/repo
+chmod a+x ~/bin/repo
+```
+
+On Windows, run that from Git Bash. Some package managers ship `repo` as well.
+
+## Get a workspace
+
+```
+mkdir vsk-world && cd vsk-world
 repo init -u https://github.com/V-Sekai/vsk-world-manifest.git -b main
 repo sync
 ```
 
-## Sides
+Expect a large download and a long first run. What you end up with is one
+folder per repository, grouped into seven numbered directories by what the code
+does — the game client and its tools, the engine work, the avatars and maps,
+the backend services.
 
-Every repository sits on a side of the hexagon, and this manifest is what
-decides which. There is **one live goal manifest** — this one. A repository is
-placed when it is added to it, not later: an unplaced project is the drift the
-six words exist to stop. `repo list` and the org's archived set are the two
-things to read, and they disagree loudly when this rots.
+## Work in it
 
-**The sides are not listed here.** `default.xml` is sorted by side and reading
-it top to bottom is the listing, so a table of the same seven rows would be a
-copy that goes stale the first time anything moves and says nothing while it
-does. `CLAUDE.md` in the manuals says what each side holds, once.
-`check_readme_index.py` enforces the absence.
+Run these from the top of the workspace.
 
-Local paths are normalised — lowercase, hyphenated, prefixes like `TOOL_` and
-`V-Sekai.` dropped. **The GitHub names are untouched.** A `<project name=>` is
-the repository as the org has it and a `<project path=>` is what it is called in
-a checkout; renaming happens locally, in this file, and nowhere else.
+| Command | What it does |
+| --- | --- |
+| `repo sync` | Pull the latest of everything |
+| `repo status` | Show your uncommitted work across every repository |
+| `repo start <branch> <project>` | Start a branch in one repository |
+| `repo list` | Show every repository and its folder |
 
-**A path says how the engine loads it.** Two things that both read as "a Godot
-C++ project" are built and shipped in ways that share nothing: an engine module
-is `config.py` and `SCsub` dropped into `godot/modules/` and compiled into the
-binary, and a GDExtension is `godot-cpp` and a `.gdextension` file loaded by a
-stock binary at runtime. Which one a repository is decides whether a change to
-it needs an engine rebuild, so the path carries it:
+Inside any folder, it is an ordinary git checkout: `git commit`, `git push`,
+and open a pull request against that repository as usual.
 
-| Suffix | Means | Look for |
-| --- | --- | --- |
-| `-module` | Godot engine C++ module | `config.py` + `SCsub` at the repo root, `register_types.cpp` |
-| `-gdextension` | Godot GDExtension | `godot-cpp` checkout, a `*.gdextension` file |
-| neither | Not a thing the engine compiles in or loads | GDScript addon, standalone library, service, asset bank, and any repository that is itself a Godot project |
+## Change what is listed
 
-`godot_openvr` and `godot_openvr_module` are the same feature written both ways.
-Without the suffix the two checkouts sit side by side saying nothing about the
-difference, and one other pair in the manifest is arranged the same way.
+Adding, moving, or removing a repository is an edit to `default.xml` in this
+repository, followed by a pull request. Before you open it, run the checks:
 
-The engine forks take no suffix. They are what modules are compiled into, so
-naming how they load one would say nothing about them.
+```
+python check_manifest_comments.py default.xml
+python check_readme_index.py readme.md
+python check_manifest_root.py <path to your workspace>
+```
 
-A `project.godot` at the root outranks both suffixes. `3-interactor/sketch`
-builds the cassie GDExtension and carries a Godot project that loads it, and
-the project is what somebody opens, so it is placed as one. A repository with
-no project of its own is what the suffixes are for.
-
-One repository is genuinely both. `godot-wasm` ships a module build and a
-GDExtension build of the same source, and its readme calls the addon the normal
-install, so it is placed at `godot-wasm-gdextension`. The module build is still
-there in the checkout.
-
-**Every project carries an explicit `revision`.** V-Sekai's default branches are
-not uniform — `master`, `godot3`, `godot-4.3`, `colliders`, `vsekai`, `flux2`,
-`4.0` and others all appear — so the manifest names each one rather than letting
-a `<default revision=>` decide silently. `<default>` sets the remote and the
-job count only.
-
-Archived repositories are not listed. Placement is what a live manifest says.
-
-**Private repositories are not listed either.** This manifest is public, and a
-`<project>` nobody outside the organisation can fetch fails their `repo sync`
-at a line they cannot read or fix. Two are private today, `v-sekai-design` and
-`godot-avatar-project`, and neither appears above. That makes the drift check
-`repo list` against the org's **public** non-archived set.
-
-## Gates
-
-Each fails the check run. None warns.
-
-- `check_manifest_comments.py` — `default.xml` carries no XML comments.
-- `check_manifest_root.py` — every `<linkfile>` resolves; `<copyfile>` is
-  blocked. Needs a workspace, so CI runs its self-test only; the full run is
-  `python check_manifest_root.py <workspace>`.
-- `check_pr_description.py` — the pull request body must say what changed.
-- `check_readme_index.py` — no block of this readme names three or more things
-  `default.xml` declares. An index would need a hand edit every time the layout
-  moved, and nothing would report the two disagreeing.
+Each check explains itself when it fails, and each one's docstring says why the
+rule exists.
