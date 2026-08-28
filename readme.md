@@ -68,6 +68,12 @@ job count only.
 
 Archived repositories are not listed. Placement is what a live manifest says.
 
+**Private repositories are not listed either.** This manifest is public, and a
+`<project>` nobody outside the organisation can fetch fails their `repo sync`
+at a line they cannot read or fix. Two are private today, `v-sekai-design` and
+`godot-avatar-project`, and neither appears above. That makes the drift check
+`repo list` against the org's **public** non-archived set.
+
 ## Gates
 
 Each fails the check run. None warns.
