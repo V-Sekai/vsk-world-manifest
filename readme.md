@@ -31,6 +31,30 @@ Local paths are normalised — lowercase, hyphenated, prefixes like `TOOL_` and
 the repository as the org has it and a `<project path=>` is what it is called in
 a checkout; renaming happens locally, in this file, and nowhere else.
 
+**A path says how the engine loads it.** Two things that both read as "a Godot
+C++ project" are built and shipped in ways that share nothing: an engine module
+is `config.py` and `SCsub` dropped into `godot/modules/` and compiled into the
+binary, and a GDExtension is `godot-cpp` and a `.gdextension` file loaded by a
+stock binary at runtime. Which one a repository is decides whether a change to
+it needs an engine rebuild, so the path carries it:
+
+| Suffix | Means | Look for |
+| --- | --- | --- |
+| `-module` | Godot engine C++ module | `config.py` + `SCsub` at the repo root, `register_types.cpp` |
+| `-gdextension` | Godot GDExtension | `godot-cpp` checkout, a `*.gdextension` file |
+| neither | Not compiled into or loaded by the engine | GDScript addon, standalone library, service, asset bank |
+
+`godot_openvr` and `godot_openvr_module` are the same feature written both ways,
+and `godot-motion-matching` and `godot_motion_matching` likewise; without the
+suffix the two checkouts sit side by side saying nothing about the difference.
+The engine forks themselves — `3-interactor/godot`, `world-godot`, `world-grid`
+— take no suffix: they are what modules are built into.
+
+One repository is genuinely both. `godot-wasm` ships a module build and a
+GDExtension build of the same source, and its readme calls the addon the normal
+install, so it is placed at `godot-wasm-gdextension`. The module build is still
+there in the checkout.
+
 **Every project carries an explicit `revision`.** V-Sekai's default branches are
 not uniform — `master`, `godot3`, `godot-4.3`, `colliders`, `vsekai`, `flux2`,
 `4.0` and others all appear — so the manifest names each one rather than letting
