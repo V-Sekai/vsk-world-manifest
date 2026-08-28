@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
 #
-# Both gates fail the check run. Neither warns.
+# Every gate here fails the check run. None warns.
 #
 # WHAT CI CANNOT CHECK, NAMED RATHER THAN OMITTED. check_manifest_root.py compares the files
 # at a workspace root against the manifest that placed them, and CI has no workspace: this
@@ -61,6 +61,22 @@ jobs:
         # the entire time. The logic moved into the gate, where it now has four controls of
         # its own, and the workflow calls it instead of reimplementing it.
         run: python check_manifest_root.py --manifest-only --manifest default.xml
+
+  readme-index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install markdown-it-py
+      # Controls first, for the same reason as above. The first of the nine is the sides
+      # table this gate was written to remove, so a run that no longer rejects it says so
+      # before it says anything about today's readme.
+      - name: negative controls
+        run: python check_readme_index.py --self-test
+      - name: the readme does not index the manifest
+        run: python check_readme_index.py readme.md --manifest default.xml
 
   manifest-comments:
     runs-on: ubuntu-latest
