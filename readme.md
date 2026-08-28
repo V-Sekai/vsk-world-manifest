@@ -39,32 +39,12 @@ job count only.
 
 Archived repositories are not listed. Placement is what a live manifest says.
 
-## The workspace root
-
-Two files reach the root of a synced workspace from `2-contract/manuals-vsk`:
-
-```xml
-<linkfile src="CLAUDE.md" dest="CLAUDE.md" />
-<linkfile src="CITATION.cff" dest="CITATION.cff" />
-```
-
-`CLAUDE.md` is the working agreements every project here is written against;
-`CITATION.cff` names the record and its license. Both are links, never copies —
-see the `check_manifest_root.py` note below for why. `AGENTS.md` sits beside
-them in `manuals` and is deliberately **not** linked: it is guidance for working
-inside that repository rather than across the workspace.
-
 ## Gates
 
-Both fail the check run. Neither warns.
+Each fails the check run. None warns.
 
-- `check_manifest_comments.py` — `default.xml` carries no XML comments. A
-  comment beside an entry is a claim that nothing verifies and that outlives the
-  entry it described. Ships with five negative controls.
-- `check_manifest_root.py` — every `<linkfile>` resolves, and `<copyfile>` is
-  blocked outright. A copy is re-made on `repo sync` and drifts silently in
-  between; a symlink has no in-between state to lose. Needs a workspace, so CI
-  runs its self-test only — the full run is
-  `python check_manifest_root.py <workspace>` and it belongs on a desk.
-- `check_pr_description.py` — the pull request body is read from the API, which
-  is the same text the reviewer sees.
+- `check_manifest_comments.py` — `default.xml` carries no XML comments.
+- `check_manifest_root.py` — every `<linkfile>` resolves; `<copyfile>` is
+  blocked. Needs a workspace, so CI runs its self-test only; the full run is
+  `python check_manifest_root.py <workspace>`.
+- `check_pr_description.py` — the pull request body must say what changed.
