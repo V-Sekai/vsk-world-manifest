@@ -65,6 +65,7 @@
     <linkfile src="CLAUDE.md" dest="CLAUDE.md" />
     <linkfile src="CITATION.cff" dest="CITATION.cff" />
   </project>
+  <project name="vsk-world-manifest" path="2-contract/vsk-world-manifest" revision="main" />
   <project name="awesome-v-sekai" path="2-contract/awesome-v-sekai" revision="main" />
   <project name="blog" path="2-contract/blog" revision="main" />
   <project name="nexus-protocol" path="2-contract/nexus-protocol" revision="main" />
