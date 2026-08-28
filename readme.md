@@ -39,6 +39,21 @@ job count only.
 
 Archived repositories are not listed. Placement is what a live manifest says.
 
+## The workspace root
+
+Two files reach the root of a synced workspace from `2-contract/manuals-vsk`:
+
+```xml
+<linkfile src="CLAUDE.md" dest="CLAUDE.md" />
+<linkfile src="CITATION.cff" dest="CITATION.cff" />
+```
+
+`CLAUDE.md` is the working agreements every project here is written against;
+`CITATION.cff` names the record and its license. Both are links, never copies —
+see the `check_manifest_root.py` note below for why. `AGENTS.md` sits beside
+them in `manuals` and is deliberately **not** linked: it is guidance for working
+inside that repository rather than across the workspace.
+
 ## Gates
 
 Both fail the check run. Neither warns.

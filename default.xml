@@ -61,7 +61,10 @@
   <project name="blender-shader-motion" path="1-transport/blender-shader-motion" revision="master" />
   <project name="V-Sekai.mediapipe-labeler" path="1-transport/mediapipe-labeler" revision="main" />
 
-  <project name="manuals" path="2-contract/manuals-vsk" revision="main" />
+  <project name="manuals" path="2-contract/manuals-vsk" revision="main">
+    <linkfile src="CLAUDE.md" dest="CLAUDE.md" />
+    <linkfile src="CITATION.cff" dest="CITATION.cff" />
+  </project>
   <project name="awesome-v-sekai" path="2-contract/awesome-v-sekai" revision="main" />
   <project name="blog" path="2-contract/blog" revision="main" />
   <project name="nexus-protocol" path="2-contract/nexus-protocol" revision="main" />
