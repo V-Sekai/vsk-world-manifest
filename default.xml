@@ -77,7 +77,8 @@
   <project name="world-build" path="3-interactor/world-build" revision="main">
     <linkfile src="." dest="world-build" />
   </project>
-  <project name="world-grid" path="3-interactor/world-grid" revision="main" />
+  <project name="godot" path="3-interactor/world-grid-tools/godot" revision="refs/tags/groups-4.6.2026-02-07T003827Z" />
+  <project name="world-grid-tools" path="3-interactor/world-grid-tools" revision="main" />
   <project name="many_bone_ik" path="3-interactor/many-bone-ik-module" revision="main" />
   <project name="godot-renik" path="3-interactor/godot-renik-gdextension" revision="main" />
   <project name="renik" path="3-interactor/renik-gdscript" revision="gdscript" />
