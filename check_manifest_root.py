@@ -1,0 +1,409 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+"""Gate: this manifest places root files with linkfile only, and every link still resolves
+to the file it names.
+
+WHY THIS EXISTS. The workspace root is a `repo` client and not a git repository, so the
+files sitting at it are tracked by nothing. `repo status` cannot see them, no `.gitignore`
+reaches them, and they are present on one desk and absent on the next. `CLAUDE.md` already
+settles what they should be, in the section that reverses an earlier decision:
+
+    Two links to one file, because two tools look for two names and neither reads the
+    other's. A second copy would answer the second name and then drift from the first;
+    a link cannot.
+
+That is the whole argument, and it applies to every root file rather than only to the two
+it was written about. So this gate enforces both halves of it.
+
+COPYFILE IS BLOCKED. `repo` offers `<copyfile>` and it is the wrong tool here. A copy is
+re-made on `repo sync` and is an ordinary writable file in between, so an edit to the root
+lands somewhere real, survives, and is then overwritten with no report - the newer side
+loses and nothing says which one it was. A symlink has no in-between state to lose: there
+is one inode under two names, and editing either edits the file.
+
+The cost of the block is stated rather than hidden. A link at the root resolves into the
+project it points at, so a root `README.md` opens
+`2-contract/manuals-vsk/<doc>/README.md`
+and a reader sees the path they landed in. That is a real loss of framing, and it is
+cheaper than a second copy that drifts, because drift is silent and a visible path is not.
+
+AND EVERY LINK IS RESOLVED. Blocking copies is not enough on its own. A symlink can be
+repointed at the wrong file, be left dangling by a source that moved, or be quietly replaced
+by a regular file with the same bytes - which passes any content comparison on the day it
+happens and drifts from then on. Each of those is checked, and each fails.
+
+DETECTION FLOOR. None. The population is fixed and small - every `<linkfile>` and
+`<copyfile>` element in `default.xml` - so it is enumerated rather than sampled, and the run
+prints what it enumerated beside what it could not check. An entry whose precondition is
+unmet is a FAIL, never a skip, because a skip reads exactly like a pass.
+
+Run:  python check_manifest_root.py <workspace> [--manifest PATH] [--self-test]
+"""
+
+import argparse
+import hashlib
+import json
+import os
+import shutil
+import sys
+import tempfile
+import xml.etree.ElementTree as ET
+
+# The generated .repo/manifest.xml is a copy repo writes and warns against editing. The
+# checkout under .repo/manifests is the manifest repository itself, which is what a change
+# to the goal is actually made against, so that is what this reads.
+DEFAULT_MANIFEST = os.path.join(".repo", "manifests", "default.xml")
+BOOKKEEPING = os.path.join(".repo", "copy-link-files.json")
+
+
+def entries(manifest):
+    """Every linkfile and copyfile the manifest declares, in document order.
+
+    Copyfiles are collected rather than ignored. A blocked construct that the reader never
+    sees reported is indistinguishable from one that was never written.
+    """
+    out = []
+    for project in ET.parse(manifest).getroot().iter("project"):
+        # A <project> with no path is checked out at its name. That is repo's own default
+        # and not an error, so it must not be read as a missing attribute.
+        path = project.get("path") or project.get("name")
+        for kind in ("linkfile", "copyfile"):
+            for el in project.findall(kind):
+                out.append((kind, path, el.get("src"), el.get("dest")))
+    return out
+
+
+def check_entry(root, kind, project, src, dest):
+    """(ok, note) for one entry. Every unmet precondition returns False, never None."""
+    if kind == "copyfile":
+        # Blocked on construction, before the bytes are looked at. A copyfile whose content
+        # happens to agree today is exactly the case this rule exists to catch, so checking
+        # identity first and the construct second would let it through on most days.
+        return False, "copyfile is blocked; declare it as <linkfile> instead"
+
+    src_abs = os.path.join(root, project, src)
+    dest_abs = os.path.join(root, dest)
+
+    if not os.path.exists(src_abs):
+        return False, "source missing: %s/%s" % (project, src)
+    # lexists, so a dangling link is present-and-broken rather than absent. Those are two
+    # different faults and reporting them alike loses which one happened.
+    if not os.path.lexists(dest_abs):
+        return False, "destination missing"
+    if not os.path.islink(dest_abs):
+        note = "not a symlink"
+        if os.path.isfile(dest_abs) and _sha(dest_abs) == _sha(src_abs):
+            # The quiet one, and the reason a bytes-equal test is not sufficient by itself.
+            note += " (bytes agree today; a copy is free to drift tomorrow)"
+        return False, note
+    if not os.path.exists(dest_abs):
+        return False, "dangling -> %s" % os.readlink(dest_abs)
+    if os.path.realpath(dest_abs) != os.path.realpath(src_abs):
+        return False, "resolves to %s" % os.path.relpath(os.path.realpath(dest_abs), root)
+    # Identity now holds by construction: one inode under two names, nothing to compare.
+    return True, "-> %s/%s" % (project, src)
+
+
+def _sha(path):
+    h = hashlib.sha256()
+    with open(path, "rb") as fh:
+        for block in iter(lambda: fh.read(1 << 16), b""):
+            h.update(block)
+    return h.hexdigest()
+
+
+def check_bookkeeping(root, declared):
+    """repo's record of what it put at the root, against what the manifest declares.
+
+    Bugs live at interfaces, and this is one: a stale entry means `repo sync` either
+    clobbers a file it no longer owns or abandons one it does.
+    """
+    path = os.path.join(root, BOOKKEEPING)
+    if not os.path.exists(path):
+        return ["%s missing" % BOOKKEEPING]
+    with open(path, encoding="utf8") as fh:
+        book = json.load(fh)
+    problems = []
+    want = sorted(d for k, _, _, d in declared if k == "linkfile")
+    got = sorted(book.get("linkfile", []))
+    if want != got:
+        problems.append("linkfile: repo records %s, manifest declares %s" % (got, want))
+    copies = sorted(book.get("copyfile", []))
+    if copies:
+        problems.append("copyfile: repo has placed %s at the root" % copies)
+    return problems
+
+
+def check_manifest_only(manifest, verbose=True):
+    """The half that needs no workspace: the manifest parses, and declares no copyfile.
+
+    Split out so CI can run it on every push. It used to be eight lines of Python inside
+    the workflow YAML, where nothing could exercise it - logic with no control is decoration
+    however obviously correct it looks, and this is the same rule that put negative controls
+    in self_test(). Living here, it gets two.
+    """
+    try:
+        declared = entries(manifest)
+    except ET.ParseError as exc:
+        # Not a crash. A manifest that does not parse is a FAIL with a reason, because a
+        # traceback is a worse report than a line saying which construct broke. An XML
+        # comment containing a double hyphen is the way this is usually reached.
+        if verbose:
+            print("  FAIL %-12s %-9s does not parse: %s" % ("(manifest)", "", exc))
+        return None, ["manifest does not parse: %s" % exc]
+
+    problems = []
+    for kind, project, src, dest in declared:
+        if kind != "copyfile":
+            continue
+        problems.append((dest, project))
+        if verbose:
+            print("  FAIL %-12s %-9s declared by %s" % (dest, kind, project))
+    if verbose and not problems:
+        print("  ok   %-12s %-9s %d entries, none of them copies"
+              % ("(manifest)", "", len(declared)))
+    return declared, problems
+
+
+def check(root, manifest, verbose=True):
+    declared, broken = check_manifest_only(manifest, verbose=False)
+    if declared is None:
+        if verbose:
+            print("  FAIL %-12s %-9s %s" % ("(manifest)", "", broken[0]))
+        return [], [], broken
+    failures = []
+    for kind, project, src, dest in declared:
+        ok, note = check_entry(root, kind, project, src, dest)
+        if verbose:
+            print("  %-4s %-12s %-9s %s" % ("ok" if ok else "FAIL", dest, kind, note))
+        if not ok:
+            failures.append((dest, kind, note))
+    book = check_bookkeeping(root, declared)
+    if verbose:
+        for problem in book:
+            print("  FAIL %-12s %-9s %s" % ("(bookkeeping)", "", problem))
+    return declared, failures, book
+
+
+def fixture(tmp):
+    """A synthetic workspace with one correct linkfile.
+
+    Built rather than borrowed. The real tree's entries are all correct, so it cannot
+    exercise a dangling link or a missing destination without being damaged first, and a
+    gate that has to break the checkout to prove itself is not one anybody will run.
+    """
+    os.makedirs(os.path.join(tmp, "proj"))
+    for name, text in (("SRC.md", "the source\n"), ("OTHER.md", "a different file\n")):
+        with open(os.path.join(tmp, "proj", name), "w") as fh:
+            fh.write(text)
+    os.symlink(os.path.join("proj", "SRC.md"), os.path.join(tmp, "LINK.md"))
+
+    manifest = os.path.join(tmp, "default.xml")
+    with open(manifest, "w") as fh:
+        fh.write('<manifest><project name="proj" path="proj">'
+                 '<linkfile src="SRC.md" dest="LINK.md" />'
+                 "</project></manifest>\n")
+    os.makedirs(os.path.join(tmp, ".repo"))
+    with open(os.path.join(tmp, BOOKKEEPING), "w") as fh:
+        json.dump({"linkfile": ["LINK.md"], "copyfile": []}, fh)
+    return manifest
+
+
+def self_test():
+    """NEGATIVE CONTROLS, one per failure mode this gate claims to catch.
+
+    A mode with no control here is a mode the gate does not actually check, however
+    confidently the docstring says otherwise.
+    """
+    def declare_copyfile(tmp, manifest):
+        # The one that matters most: a copyfile whose bytes are correct. Any gate built
+        # only on content comparison passes this, which is why the construct is checked
+        # before the content and why this control is first.
+        shutil.copyfile(os.path.join(tmp, "proj", "SRC.md"), os.path.join(tmp, "COPY.md"))
+        with open(manifest, "w") as fh:
+            fh.write('<manifest><project name="proj" path="proj">'
+                     '<linkfile src="SRC.md" dest="LINK.md" />'
+                     '<copyfile src="SRC.md" dest="COPY.md" />'
+                     "</project></manifest>\n")
+        with open(os.path.join(tmp, BOOKKEEPING), "w") as fh:
+            json.dump({"linkfile": ["LINK.md"], "copyfile": ["COPY.md"]}, fh)
+
+    def repoint(tmp, _):
+        os.remove(os.path.join(tmp, "LINK.md"))
+        os.symlink(os.path.join("proj", "OTHER.md"), os.path.join(tmp, "LINK.md"))
+
+    def swap_for_copy(tmp, _):
+        os.remove(os.path.join(tmp, "LINK.md"))
+        shutil.copyfile(os.path.join(tmp, "proj", "SRC.md"), os.path.join(tmp, "LINK.md"))
+
+    def dangle(tmp, _):
+        os.remove(os.path.join(tmp, "proj", "SRC.md"))
+
+    def vanish(tmp, _):
+        os.remove(os.path.join(tmp, "LINK.md"))
+
+    def stale_book(tmp, _):
+        with open(os.path.join(tmp, BOOKKEEPING), "w") as fh:
+            json.dump({"linkfile": ["LINK.md", "GONE.md"], "copyfile": []}, fh)
+
+    def stray_copy(tmp, _):
+        with open(os.path.join(tmp, BOOKKEEPING), "w") as fh:
+            json.dump({"linkfile": ["LINK.md"], "copyfile": ["STRAY.md"]}, fh)
+
+    def unparseable(tmp, manifest):
+        # A double hyphen inside an XML comment. Illegal, and the way this is actually hit:
+        # it is what an em-dash-shaped sentence turns into when somebody types two hyphens.
+        with open(manifest, "w") as fh:
+            fh.write('<manifest><!-- a -- b --><project name="proj" path="proj">'
+                     '<linkfile src="SRC.md" dest="LINK.md" />'
+                     "</project></manifest>\n")
+
+    controls = [
+        ("a copyfile entry whose bytes match its source", declare_copyfile),
+        ("a linkfile repointed at another file", repoint),
+        ("a linkfile replaced by a byte-identical copy", swap_for_copy),
+        ("a linkfile left dangling by a moved source", dangle),
+        ("a destination removed outright", vanish),
+        ("bookkeeping naming a link the manifest does not", stale_book),
+        ("bookkeeping recording a copy at the root", stray_copy),
+        ("a manifest that does not parse", unparseable),
+    ]
+    # The workspace-free path gets its own controls rather than borrowing the ones above.
+    # It is a different entry point, and a control that never calls it proves nothing about
+    # it - which was the defect: this logic used to sit in the workflow with no control at
+    # all, and looked correct the whole time.
+    manifest_only = [
+        ("a copyfile declared, with no workspace to compare against", declare_copyfile),
+        ("a manifest that does not parse, with no workspace", unparseable),
+    ]
+
+    tmp = tempfile.mkdtemp()
+    try:
+        manifest = fixture(tmp)
+        _, failures, book = check(tmp, manifest, verbose=False)
+        clean = not failures and not book
+        print("  %-4s positive control: a correct linkfile-only tree passes"
+              % ("ok" if clean else "FAIL"))
+        if not clean:
+            print("       the gate rejects a correct tree; the controls below prove nothing.")
+            return 1
+    finally:
+        shutil.rmtree(tmp)
+
+    bad = 0
+    for name, mutate in controls:
+        tmp = tempfile.mkdtemp()
+        try:
+            manifest = fixture(tmp)
+            mutate(tmp, manifest)
+            _, failures, book = check(tmp, manifest, verbose=False)
+            caught = bool(failures or book)
+            print("  %-4s negative control: %s is rejected"
+                  % ("ok" if caught else "FAIL", name))
+            if not caught:
+                bad += 1
+        finally:
+            shutil.rmtree(tmp)
+    tmp = tempfile.mkdtemp()
+    try:
+        manifest = fixture(tmp)
+        _, clean = check_manifest_only(manifest, verbose=False)
+        print("  %-4s positive control: a linkfile-only manifest passes with no workspace"
+              % ("ok" if not clean else "FAIL"))
+        if clean:
+            return 1
+    finally:
+        shutil.rmtree(tmp)
+
+    for name, mutate in manifest_only:
+        tmp = tempfile.mkdtemp()
+        try:
+            manifest = fixture(tmp)
+            mutate(tmp, manifest)
+            caught = bool(check_manifest_only(manifest, verbose=False)[1])
+            print("  %-4s negative control: %s is rejected"
+                  % ("ok" if caught else "FAIL", name))
+            if not caught:
+                bad += 1
+        finally:
+            shutil.rmtree(tmp)
+
+    if bad:
+        print("       %d mode(s) the gate claims to catch and does not." % bad)
+        return 1
+    print("  %d of %d rejected." % (len(controls) + len(manifest_only),
+                                    len(controls) + len(manifest_only)))
+    return 0
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("workspace", nargs="?", default=None,
+                    help="the repo client root; omit with --self-test")
+    ap.add_argument("--manifest", default=None,
+                    help="default: <workspace>/%s" % DEFAULT_MANIFEST)
+    ap.add_argument("--manifest-only", action="store_true",
+                    help="parse and block copyfile without needing a workspace")
+    ap.add_argument("--self-test", action="store_true",
+                    help="prove the gate rejects each way a root file can be wrong")
+    args = ap.parse_args()
+
+    if args.self_test and self_test():
+        return 1
+
+    if args.manifest_only:
+        manifest = args.manifest or (os.path.join(os.path.abspath(args.workspace),
+                                                  DEFAULT_MANIFEST)
+                                     if args.workspace else "default.xml")
+        print()
+        declared, problems = check_manifest_only(manifest)
+        print()
+        if problems:
+            # Only the copyfile hint when the problem is copyfiles. A parse error printing
+            # "replace each <copyfile>" sends the reader hunting for a construct that is
+            # not there; it happened, on a manifest whose only fault was a double hyphen
+            # inside an XML comment.
+            if declared is not None:
+                print("Replace each <copyfile> with <linkfile>: a copy drifts, "
+                      "a link cannot.")
+            return 1
+        # Said out loud, because the whole point of this mode is that it checks less. A run
+        # that reported only "ok" would read as a full check to anybody skimming the log.
+        print("%d entries declared, 0 copyfile. The links themselves are NOT checked here;"
+              % len(declared))
+        print("that needs a workspace: python %s <workspace>" % os.path.basename(__file__))
+        return 0
+
+    if args.workspace is None:
+        if args.self_test:
+            return 0
+        ap.error("a workspace is required unless --self-test or --manifest-only is given")
+
+    root = os.path.abspath(args.workspace)
+    manifest = args.manifest or os.path.join(root, DEFAULT_MANIFEST)
+    if not os.path.exists(manifest):
+        print("no manifest at %s" % manifest)
+        return 1
+
+    print()
+    declared, failures, book = check(root, manifest)
+    links = sum(1 for e in declared if e[0] == "linkfile")
+    copies = sum(1 for e in declared if e[0] == "copyfile")
+
+    print()
+    # The baseline is the population itself: how many entries there were, and how many went
+    # unexamined. The second number is zero by construction - every entry returns ok or
+    # FAIL - and it is printed anyway, so that a future silent skip has to show itself.
+    print("%d entries enumerated (%d linkfile, %d copyfile), %d unchecked."
+          % (len(declared), links, copies, 0))
+    if failures or book:
+        print("%d root file(s) disagree with the manifest." % (len(failures) + len(book)))
+        if copies:
+            print("Replace each <copyfile> with <linkfile>: a copy drifts, a link cannot.")
+        print("Then `repo sync` to place them.")
+        return 1
+    print("All %d root file(s) are links, and each resolves to the file it names." % links)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

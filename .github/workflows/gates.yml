@@ -1,0 +1,78 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+#
+# Both gates fail the check run. Neither warns.
+#
+# WHAT CI CANNOT CHECK, NAMED RATHER THAN OMITTED. check_manifest_root.py compares the files
+# at a workspace root against the manifest that placed them, and CI has no workspace: this
+# repository is the manifest, not a `repo` client, and syncing one here would download every
+# project in the goal to test four symlinks. So CI runs that gate's self-test only, which
+# proves the gate still rejects all seven ways a root file can go wrong, and proves nothing
+# about anybody's checkout. The full run is `python check_manifest_root.py <workspace>` and
+# it belongs on a desk, not here. A silent skip reads exactly like a pass, so this paragraph
+# exists to stop that reading.
+#
+# The description gate has no such gap. It reads the pull request body from the API, which is
+# the same text the reviewer sees.
+
+name: gates
+
+on:
+  pull_request:
+    # `edited` matters more than usual here: the description is the thing under test, and it
+    # is most often fixed by editing it rather than by pushing a commit.
+    types: [opened, edited, synchronize, reopened]
+  push:
+    branches: [main]
+
+jobs:
+  pr-description:
+    # Skipped on push, where there is no description to measure. This is the one skip in the
+    # file and it is a genuine absence rather than an unchecked case.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install markdown-it-py
+      - name: negative controls
+        run: python check_pr_description.py --self-test
+      - name: this pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python check_pr_description.py --pr ${{ github.event.number }} --repo ${{ github.repository }}
+
+  manifest-root:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # Controls first. A check whose controls have not run yet is a check nobody has
+      # reason to believe, so the order is deliberate rather than incidental.
+      - name: negative controls
+        run: python check_manifest_root.py --self-test
+      - name: manifest parses and declares no copyfile
+        # This used to be two inline steps: an `E.parse` one-liner and eight lines of Python
+        # in a heredoc. Both were real logic living where no control could reach them, which
+        # is the same defect the controls above exist to prevent - and they looked correct
+        # the entire time. The logic moved into the gate, where it now has four controls of
+        # its own, and the workflow calls it instead of reimplementing it.
+        run: python check_manifest_root.py --manifest-only --manifest default.xml
+
+  manifest-comments:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # Controls first, for the same reason as above.
+      - name: negative controls
+        run: python check_manifest_comments.py --self-test
+      # No pinned dependency and nothing to install: the gate is stdlib only, because the
+      # thing it reads is text and the thing it parses is `xml.etree`.
+      - name: the manifest holds data and nothing else
+        run: python check_manifest_comments.py default.xml
