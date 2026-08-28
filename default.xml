@@ -73,6 +73,7 @@
   <project name="shader-motion-navy-lead-ostrich" path="2-contract/shader-motion-format" revision="main" />
 
   <project name="godot" path="3-interactor/godot" revision="master" />
+  <project name="godot" path="3-interactor/godot-groups-4.6" revision="refs/tags/groups-4.6.2026-02-07T003827Z" />
   <project name="world-godot" path="3-interactor/world-godot" revision="main">
     <linkfile src="." dest="world-godot" />
   </project>
