@@ -187,6 +187,7 @@
   <project name="V-Sekai.blue-tin-fox-models" path="6-datasource/blue-tin-fox-models" revision="master" />
   <project name="cassie-data" path="6-datasource/cassie-data" revision="master" />
   <project name="casync-v-sekai-game" path="6-datasource/casync-game" revision="main" />
+  <project name="casync-llvm-mingw" path="6-datasource/casync-llvm-mingw" revision="main" />
   <project name="multiplayer-fabric-casync-seed" path="6-datasource/casync-seed" revision="main" />
   <project name="godot-vsk-sqlite" path="6-datasource/godot-vsk-sqlite-module" revision="main" />
   <project name="elixir_godot_parsers" path="6-datasource/elixir-godot-parsers" revision="main" />
