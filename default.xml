@@ -140,7 +140,7 @@
   <project name="V-Sekai.flac" path="3-interactor/godot-flac-module" revision="master" />
   <project name="mediapipe" path="3-interactor/mediapipe" revision="vsekai" />
   <project name="generative-engine" path="3-interactor/generative-engine" revision="main" />
-  <project name="interactor-sketch" path="3-interactor/sketch-gdextension" revision="main" />
+  <project name="interactor-sketch" path="3-interactor/sketch" revision="main" />
   <project name="math_util" path="3-interactor/math-util" revision="main" />
   <project name="gd_util" path="3-interactor/gd-util" revision="main" />
   <project name="date_and_time" path="3-interactor/date-and-time" revision="master" />
