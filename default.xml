@@ -24,7 +24,7 @@
   <project name="sar1_graphics_manager" path="1-transport/sar1-graphics-manager" revision="main" />
   <project name="input_manager" path="1-transport/input-manager" revision="main" />
   <project name="network_manager" path="1-transport/network-manager" revision="main" />
-  <project name="godot_http_pool" path="1-transport/godot-http-pool" revision="main" />
+  <project name="godot_http_pool" path="1-transport/godot-http-pool-module" revision="main" />
   <project name="godot-http-gltf2-binary" path="1-transport/godot-http-gltf2-binary" revision="main" />
   <project name="godot_uro" path="1-transport/godot-uro-client" revision="main" />
   <project name="vsk_editor" path="1-transport/vsk-editor" revision="main" />
@@ -36,18 +36,18 @@
   <project name="V-Sekai.virtual_joystick_godot" path="1-transport/virtual-joystick" revision="main" />
   <project name="godot-console" path="1-transport/godot-console" revision="godot4" />
   <project name="performance_monitor" path="1-transport/performance-monitor" revision="main" />
-  <project name="godot_tracy" path="1-transport/godot-tracy" revision="main" />
+  <project name="godot_tracy" path="1-transport/godot-tracy-module" revision="main" />
   <project name="godot_planar_reflection" path="1-transport/godot-planar-reflection" revision="main" />
   <project name="godot_texturerecturl" path="1-transport/godot-texture-rect-url" revision="master" />
   <project name="godot-mini-video" path="1-transport/godot-mini-video" revision="main" />
   <project name="godot_vk_video" path="1-transport/godot-vk-video" revision="main" />
   <project name="godot-paint-mixer" path="1-transport/godot-paint-mixer" revision="main" />
-  <project name="godot-lasso" path="1-transport/godot-lasso" revision="main" />
+  <project name="godot-lasso" path="1-transport/godot-lasso-gdextension" revision="main" />
   <project name="godot-ply" path="1-transport/godot-ply" revision="main" />
   <project name="godot-point-cloud-multistroke-recognizer" path="1-transport/multistroke-recognizer" revision="main" />
-  <project name="godot_openvr" path="1-transport/godot-openvr" revision="master" />
+  <project name="godot_openvr" path="1-transport/godot-openvr-gdextension" revision="master" />
   <project name="godot_openvr_module" path="1-transport/godot-openvr-module" revision="master-rd" />
-  <project name="godot_openxr_vendors" path="1-transport/godot-openxr-vendors" revision="master" />
+  <project name="godot_openxr_vendors" path="1-transport/godot-openxr-vendors-gdextension" revision="master" />
   <project name="SteamVR_To_OSC" path="1-transport/steamvr-to-osc" revision="main" />
   <project name="Virtual_Desktop_Body_Tracking_Configurator" path="1-transport/virtual-desktop-body-tracking" revision="main" />
   <project name="V-Sekai.godot-gui-in-vr" path="1-transport/godot-gui-in-vr" revision="master" />
@@ -74,29 +74,29 @@
   <project name="godot" path="3-interactor/godot" revision="master" />
   <project name="world-godot" path="3-interactor/world-godot" revision="main" />
   <project name="world-grid" path="3-interactor/world-grid" revision="main" />
-  <project name="many_bone_ik" path="3-interactor/many-bone-ik" revision="main" />
-  <project name="godot-renik" path="3-interactor/godot-renik" revision="main" />
+  <project name="many_bone_ik" path="3-interactor/many-bone-ik-module" revision="main" />
+  <project name="godot-renik" path="3-interactor/godot-renik-gdextension" revision="main" />
   <project name="renik" path="3-interactor/renik-gdscript" revision="gdscript" />
   <project name="3wb-IK" path="3-interactor/3wb-ik" revision="main" />
   <project name="rig-inversion" path="3-interactor/rig-inversion" revision="main" />
   <project name="blender-rignet" path="3-interactor/blender-rignet" revision="main" />
   <project name="V-Sekai.rig_net" path="3-interactor/rignet" revision="main" />
-  <project name="godot-goal-task-planner" path="3-interactor/godot-goal-task-planner" revision="main" />
-  <project name="godot-subdiv" path="3-interactor/godot-subdiv" revision="main" />
-  <project name="godot-dem-bones" path="3-interactor/godot-dem-bones" revision="godot" />
+  <project name="godot-goal-task-planner" path="3-interactor/godot-goal-task-planner-module" revision="main" />
+  <project name="godot-subdiv" path="3-interactor/godot-subdiv-module" revision="main" />
+  <project name="godot-dem-bones" path="3-interactor/godot-dem-bones-module" revision="godot" />
   <project name="godot-robust-skin-weights-transfer" path="3-interactor/skin-weights-transfer" revision="main" />
   <project name="unity-mesh-deform-direct-delta-mush" path="3-interactor/direct-delta-mush" revision="main" />
-  <project name="realtime_retarget" path="3-interactor/realtime-retarget" revision="main" />
-  <project name="godot-motion-matching" path="3-interactor/godot-motion-matching" revision="master" />
-  <project name="godot_motion_matching" path="3-interactor/godot-motion-matching-port" revision="main" />
+  <project name="realtime_retarget" path="3-interactor/realtime-retarget-module" revision="main" />
+  <project name="godot-motion-matching" path="3-interactor/godot-motion-matching-gdextension" revision="master" />
+  <project name="godot_motion_matching" path="3-interactor/godot-motion-matching-module" revision="main" />
   <project name="godot-motion-player" path="3-interactor/godot-motion-player" revision="main" />
   <project name="root-motion-extractor" path="3-interactor/root-motion-extractor" revision="main" />
   <project name="godot-humanoid" path="3-interactor/godot-humanoid" revision="main" />
   <project name="godot-active-ragdoll-physics-animations" path="3-interactor/active-ragdoll" revision="master" />
   <project name="TOOL_cloth_dynamics" path="3-interactor/cloth-dynamics" revision="main" />
   <project name="preconditioner-for-cloth-and-deformable-body-simulation" path="3-interactor/cloth-preconditioner" revision="master" />
-  <project name="hydro" path="3-interactor/hydro" revision="master" />
-  <project name="voxel_mesh" path="3-interactor/voxel-mesh" revision="main" />
+  <project name="hydro" path="3-interactor/hydro-module" revision="master" />
+  <project name="voxel_mesh" path="3-interactor/voxel-mesh-module" revision="main" />
   <project name="godot-verlet-rope" path="3-interactor/godot-verlet-rope" revision="4.0" />
   <project name="TOOL_coacd" path="3-interactor/coacd" revision="main" />
   <project name="TOOL_geodesiac_path" path="3-interactor/geodesic-path" revision="main" />
@@ -108,19 +108,19 @@
   <project name="godot_json_scene_merge" path="3-interactor/json-scene-merge" revision="main" />
   <project name="godot-skeleton-merge-tool" path="3-interactor/skeleton-merge-tool" revision="main" />
   <project name="godot-blue-zinc-pelican-character-generator" path="3-interactor/pelican-character-generator" revision="main" />
-  <project name="godot-cmark" path="3-interactor/godot-cmark" revision="main" />
-  <project name="godot-lbfgs" path="3-interactor/godot-lbfgs" revision="main" />
-  <project name="godot_texture_packer" path="3-interactor/godot-texture-packer" revision="master" />
+  <project name="godot-cmark" path="3-interactor/godot-cmark-module" revision="main" />
+  <project name="godot-lbfgs" path="3-interactor/godot-lbfgs-module" revision="main" />
+  <project name="godot_texture_packer" path="3-interactor/godot-texture-packer-module" revision="master" />
   <project name="godot_vat3" path="3-interactor/godot-vat3" revision="main" />
-  <project name="godot_visual_script" path="3-interactor/godot-visual-script" revision="main" />
-  <project name="godot-wasm" path="3-interactor/godot-wasm" revision="godot-4" />
-  <project name="javascript" path="3-interactor/godot-javascript" revision="main" />
+  <project name="godot_visual_script" path="3-interactor/godot-visual-script-module" revision="main" />
+  <project name="godot-wasm" path="3-interactor/godot-wasm-gdextension" revision="godot-4" />
+  <project name="javascript" path="3-interactor/godot-javascript-module" revision="main" />
   <project name="wgpu-experiments" path="3-interactor/wgpu-experiments" revision="main" />
   <project name="seurat" path="3-interactor/seurat" revision="master" />
   <project name="godot-seurat" path="3-interactor/godot-seurat" revision="main" />
   <project name="hlsl2glslfork" path="3-interactor/hlsl2glsl" revision="master" />
   <project name="godot-materialx" path="3-interactor/godot-materialx" revision="main" />
-  <project name="godot-mtlx" path="3-interactor/godot-mtlx" revision="godot-4.3" />
+  <project name="godot-mtlx" path="3-interactor/godot-mtlx-module" revision="godot-4.3" />
   <project name="mtlx_json_converter" path="3-interactor/mtlx-json-converter" revision="main" />
   <project name="Godot-MToon-Shader" path="3-interactor/godot-mtoon-shader" revision="main" />
   <project name="godot-shader-motion" path="3-interactor/godot-shader-motion" revision="main" />
@@ -129,7 +129,7 @@
   <project name="UniVRM" path="3-interactor/univrm" revision="master" />
   <project name="VRCFury" path="3-interactor/vrcfury" revision="main" />
   <project name="unidot_importer" path="3-interactor/unidot-importer" revision="main" />
-  <project name="godot-pmx" path="3-interactor/godot-pmx" revision="main" />
+  <project name="godot-pmx" path="3-interactor/godot-pmx-module" revision="main" />
   <project name="godot-miku-miku-dance-vrm-vsekai" path="3-interactor/godot-mmd-vrm" revision="master" />
   <project name="godot-usd" path="3-interactor/godot-usd" revision="main" />
   <project name="fbx-udim-unpack" path="3-interactor/fbx-udim-unpack" revision="master" />
@@ -137,10 +137,10 @@
   <project name="omi-personality-transform-script" path="3-interactor/omi-personality-transform" revision="vrm-handling" />
   <project name="vsk_importer_exporter" path="3-interactor/vsk-importer-exporter" revision="main" />
   <project name="vsk_vrm_avatar_tool" path="3-interactor/vsk-vrm-avatar-tool" revision="main" />
-  <project name="V-Sekai.flac" path="3-interactor/godot-flac" revision="master" />
+  <project name="V-Sekai.flac" path="3-interactor/godot-flac-module" revision="master" />
   <project name="mediapipe" path="3-interactor/mediapipe" revision="vsekai" />
   <project name="generative-engine" path="3-interactor/generative-engine" revision="main" />
-  <project name="interactor-sketch" path="3-interactor/sketch" revision="main" />
+  <project name="interactor-sketch" path="3-interactor/sketch-gdextension" revision="main" />
   <project name="math_util" path="3-interactor/math-util" revision="main" />
   <project name="gd_util" path="3-interactor/gd-util" revision="main" />
   <project name="date_and_time" path="3-interactor/date-and-time" revision="master" />
@@ -187,7 +187,7 @@
   <project name="cassie-data" path="6-datasource/cassie-data" revision="master" />
   <project name="casync-v-sekai-game" path="6-datasource/casync-game" revision="main" />
   <project name="multiplayer-fabric-casync-seed" path="6-datasource/casync-seed" revision="main" />
-  <project name="godot-vsk-sqlite" path="6-datasource/godot-vsk-sqlite" revision="main" />
+  <project name="godot-vsk-sqlite" path="6-datasource/godot-vsk-sqlite-module" revision="main" />
   <project name="elixir_godot_parsers" path="6-datasource/elixir-godot-parsers" revision="main" />
   <project name="cockroach" path="6-datasource/cockroachdb" revision="release-22.1-v-sekai" />
   <project name="go-ycsb" path="6-datasource/go-ycsb" revision="master" />
@@ -198,7 +198,7 @@
   <project name="flux-config" path="7-service/flux-config" revision="flux2" />
   <project name="docker-groups" path="7-service/docker-groups" revision="master" />
   <project name="self-ignite-k3s-auto-start-gitops-image" path="7-service/k3s-gitops-image" revision="master" />
-  <project name="godot-desync-otel" path="7-service/godot-desync-otel" revision="main" />
+  <project name="godot-desync-otel" path="7-service/godot-desync-otel-module" revision="main" />
   <project name="rust-desync-web" path="7-service/rust-desync-web" revision="main" />
   <project name="vsona-discord-bot" path="7-service/vsona-discord-bot" revision="main" />
   <project name="vsk-merge" path="7-service/merge" revision="main" />
