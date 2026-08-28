@@ -42,13 +42,18 @@ it needs an engine rebuild, so the path carries it:
 | --- | --- | --- |
 | `-module` | Godot engine C++ module | `config.py` + `SCsub` at the repo root, `register_types.cpp` |
 | `-gdextension` | Godot GDExtension | `godot-cpp` checkout, a `*.gdextension` file |
-| neither | Not compiled into or loaded by the engine | GDScript addon, standalone library, service, asset bank |
+| neither | Not a thing the engine compiles in or loads | GDScript addon, standalone library, service, asset bank, and any repository that is itself a Godot project |
 
 `godot_openvr` and `godot_openvr_module` are the same feature written both ways,
 and `godot-motion-matching` and `godot_motion_matching` likewise; without the
 suffix the two checkouts sit side by side saying nothing about the difference.
 The engine forks themselves — `3-interactor/godot`, `world-godot`, `world-grid`
 — take no suffix: they are what modules are built into.
+
+A `project.godot` at the root outranks both suffixes. `3-interactor/sketch`
+builds the cassie GDExtension and carries a Godot project that loads it, and
+the project is what somebody opens, so it is placed as one. A repository with
+no project of its own is what the suffixes are for.
 
 One repository is genuinely both. `godot-wasm` ships a module build and a
 GDExtension build of the same source, and its readme calls the addon the normal
